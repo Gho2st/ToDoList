@@ -37,36 +37,54 @@ const itemsSchema = new mongoose.Schema({
   //Storing items into an array
   const defaultItems = [item1, item2, item3];
 
-  Item.insertMany(defaultItems)
-    .then(function(){
-      console.log("Successfully saved into our DB.");
+  
+
+app.get("/",function(req, res){
+    
+    
+
+    Item.find({}).then(function(foundItems){
+      if(foundItems.length === 0 ){
+        Item.insertMany(defaultItems)
+          .then(function(){
+            console.log("Successfully saved into our DB.");
+          })
+          .catch(function(err){
+            console.log(err);
+          });
+          res.redirect("/")
+      }else{
+        res.render("list", { listTitle: "Today", newListItems: foundItems });
+      }
+      
     })
     .catch(function(err){
       console.log(err);
     });
 
-app.get("/",function(req, res){
-    
-    // const day = date.getDate();
-
-    res.render("list",{listTitle: "Today", newListItems: items});
-
 });
 
 app.post("/",function(req, res){
 
-    let item = req.body.newItem;
-    
-    if (req.body.list === "Work List"){
-        workItems.push(item);
-        res.redirect("/work");
-    }
-    else{
-        items.push(item);
-        res.redirect("/");
-    }
+   const itemName = req.body.newItem;
 
+   const item = new Item({
+    name: itemName
+   })
+   item.save()
+
+   res.redirect("/")
     
+});
+
+app.post("/delete",function(req, res){
+  const checkedItemId = req.body.checkbox
+  if (checkedItemId != undefined){
+    Item.findByIdAndRemove(checkedItemId)
+    .then(()=> console.log(`Deleted ${checkedItemId} succesfully`))
+    .catch((err) => console.log("Deletion Error " + err));
+    res.redirect("/")
+  }
 });
 
 app.get("/work",function(req, res){
